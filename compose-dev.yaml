@@ -1,0 +1,10 @@
+version: '3.9'
+services:
+  ui:
+    container_name: react-data-visualization
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    command: /bin/sh -c "while sleep 1000; do :; done"
+
+  

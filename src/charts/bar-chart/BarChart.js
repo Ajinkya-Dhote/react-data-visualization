@@ -1,33 +1,20 @@
 import * as d3 from "d3"
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import PropTypes from 'prop-types'; // ES6 
 
 let chart;
 function BarChart(props) {
-    const [data, updateData] = useState(props.data);
     let ref = useRef();
     // let chart;
     useEffect(() => {
         console.log("Running");
-        chart = _BarChart(data,{
-            x: d => d.letter,
-            y: d => d.frequency,
-            yFormat: "%",
-            yLabel: "↑ Frequency",
-            height: 500,
-            color: "steelblue",
-            duration: 750, // slow transition for demonstration
-            ref: ref
-           });
+        chart = _BarChart(props.data, {...props.config, ref: ref});
     
     }, [])
 
     useEffect(() => {
-        // updateData(data)
-        console.log(chart);
-        console.log(chart);
-        chart.update(data)
-    }, [data])
+        chart.update(props.data)
+    }, [props.data])
    
     // setTimeout(() => {
     //     updateData([{
@@ -75,6 +62,9 @@ function _BarChart(data, {
     color = "currentColor", // bar fill color
     duration: initialDuration = 250, // transition duration, in milliseconds
     delay: initialDelay = (_, i) => i * 20, // per-element transition delay, in milliseconds
+    isGridVisible = true,
+    isXaxisVisible = true,
+    isYaxisVisible = true,
     ref,
   } = {}) {
     // Compute values.
@@ -84,6 +74,7 @@ function _BarChart(data, {
     // Compute default domains, and unique the x-domain.
     if (xDomain === undefined) xDomain = X;
     if (yDomain === undefined) yDomain = [0, d3.max(Y)];
+    console.log(yDomain, Y)
     xDomain = new d3.InternSet(xDomain);
   
     // Omit any data not present in the x-domain.
@@ -96,14 +87,15 @@ function _BarChart(data, {
     const yAxis = d3.axisLeft(yScale).ticks(height / 40, yFormat);
     const format = yScale.tickFormat(100, yFormat);
   
-    console.log(ref.current);
     const svg = d3.select(ref.current)
         .attr("width", width)
         .attr("height", height)
         .attr("viewBox", [0, 0, width, height])
         .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
   
-    const yGroup = svg.append("g")
+    let yGroup;
+    if (isYaxisVisible) {
+      yGroup = svg.append("g")
         .attr("transform", `translate(${marginLeft},0)`)
         .call(yAxis)
         .call(g => g.select(".domain").remove())
@@ -114,6 +106,7 @@ function _BarChart(data, {
             .attr("fill", "currentColor")
             .attr("text-anchor", "start")
             .text(yLabel));
+    }
   
     let rect = svg.append("g")
         .attr("fill", color)
@@ -125,10 +118,15 @@ function _BarChart(data, {
         .style("mix-blend-mode", "multiply")
         .call(rect => rect.append("title")
             .text(i => [X[i], format(Y[i])].join("\n")));
+
+    let xGroup;
+    if(isXaxisVisible) {
+      xGroup = svg.append("g")
+      .attr("transform", `translate(0,${height - marginBottom})`)
+      .call(xAxis);
+    }
   
-    const xGroup = svg.append("g")
-        .attr("transform", `translate(0,${height - marginBottom})`)
-        .call(xAxis);
+
   
     // A helper method for updating the position of bars.
     function position(rect, x, y) {
@@ -141,14 +139,17 @@ function _BarChart(data, {
   
     // A helper method for generating grid lines on the y-axis.
     function grid(tick) {
-      return tick.append("line")
-          .attr("class", "grid")
-          .attr("x2", width - marginLeft - marginRight)
-          .attr("stroke", "currentColor")
-          .attr("stroke-opacity", 0.1);
+      console.log(grid);
+      if (isGridVisible) {
+        return tick.append("line")
+        .attr("class", "grid")
+        .attr("x2", width - marginLeft - marginRight)
+        .attr("stroke", "currentColor")
+        .attr("stroke-opacity", 0.1);
+      }
+     
     }
   
-    console.log(svg);
     // Call chart.update(data, options) to transition to new data.
     return Object.assign(svg.node(), {
       update(data, {
@@ -206,16 +207,22 @@ function _BarChart(data, {
             .call(position, i => xScale(X[i]), i => yScale(Y[i]));
   
         // Transition the x-axis (using a possibly staggered delay per tick).
-        xGroup.transition(t)
-            .call(xAxis)
-            .call(g => g.selectAll(".tick").delay(delay));
+        if (isXaxisVisible) {
+          xGroup.transition(t)
+          .call(xAxis)
+          .call(g => g.selectAll(".tick").delay(delay));
+        }
+        
   
         // Transition the y-axis, then post process for grid lines etc.
-        yGroup.transition(t)
+        if (isYaxisVisible) {
+          yGroup.transition(t)
             .call(yAxis)
-          .selection()
-            .call(g => g.select(".domain").remove())
-            .call(g => g.selectAll(".tick").selectAll(".grid").data([,]).join(grid));
+              .selection()
+                .call(g => g.select(".domain").remove())
+                .call(g => g.selectAll(".tick").selectAll(".grid").data([,]).join(grid));
+        }
+       
       }
     });
   }

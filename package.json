@@ -1,11 +1,14 @@
 {
-  "name": "react-data-visualization",
-  "version": "1.0.0",
+  "name": "@ajinkya-dhote/react-data-visualization",
+  "version": "1.0.1",
   "description": "React data visualization libarary",
+  "homepage": "https://github.com/Ajinkya-Dhote/react-data-visualization",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "rollup": "rollup -c",
     "storybook": "start-storybook -p 6006",
+    "predeploy": "npm run build-storybook",
+    "deploy-storybook": "gh-pages -d storybook-static",
     "build-storybook": "build-storybook"
   },
   "keywords": [
@@ -33,7 +36,9 @@
     "@storybook/testing-library": "^0.0.13",
     "babel-loader": "^9.1.2",
     "d3": "^7.8.2",
-   
+    "gh-pages": "^5.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "rollup": "^2.79.1",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-commonjs": "^10.1.0",
